@@ -1,0 +1,6 @@
+# .gitignore
+venv/  # ou le nom de ton dossier d'environnement virtuel
+.env
+*.pyc
+__pycache__/
+

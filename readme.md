@@ -43,15 +43,16 @@ This script allows you to retrieve information about a network device (such as a
 
 ## Usage
 
-To run the script and list the information for a specific device, use the following command:  
-    ```bash
-    python device.py
-  
+To run the script and list the information for a specific device, use the following command:
+   ```bash
+   python device.py
+   ```
+     
+You can use the script without parameters, in this case all devices will be scaned. If you want you can indicate a the device ID as:  
 
-You can use the script wuthout parameters, in this case all devices will be scaned. If you want you can indicate a the device ID as:  
-    ```bash
-    python device.py 1
-
+   ```bash
+   python device.py 1
+   ```
 
 ## Contributing
 Contributions are welcome! To contribute:
@@ -64,4 +65,5 @@ Contributions are welcome! To contribute:
 
 ## License
 This project is licensed under the MIT License. See the LICENSE file for details.
+
 

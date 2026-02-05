@@ -91,6 +91,12 @@ def create_network_graph():
             # Extraire les périphériques des terminaisons
             a_device = a_terminations[0].get("object", {}).get("device", {})
             b_device = b_terminations[0].get("object", {}).get("device", {})
+             # Extraire les périphériques et les ports des terminaisons
+            a_interface = a_terminations[0].get("object", {})
+            b_interface = b_terminations[0].get("object", {})
+    
+            a_port_name = a_interface.get("name", "Unknown Port")
+            b_port_name = b_interface.get("name", "Unknown Port")
 
             if not a_device or not b_device:
                 print(f"Périphériques manquants pour la connexion {connection.get('id', 'inconnu')}")
@@ -101,8 +107,14 @@ def create_network_graph():
 
             if not device_a_id or not device_b_id or device_a_id == device_b_id:
                 continue
-
-            net.add_edge(device_a_id, device_b_id, title=f"Connected via {connection.get('type', 'cable')}")
+            # Trier les ports par ID de périphérique pour un ordre cohérent
+            if device_a_id < device_b_id:
+                edge_label = f"{a_port_name} ↔ {b_port_name}"
+            else:
+                edge_label = f"{b_port_name} ↔ {a_port_name}"
+            #Ajouter l'arête avec une étiquette contenant les noms des ports
+            #net.add_edge(device_a_id, device_b_id, title=f"Connected via {connection.get('type', 'cable')}")
+            net.add_edge(device_a_id, device_b_id, label=edge_label)
 
         except Exception as e:
             print(f"Erreur lors du traitement de la connexion {connection.get('id', 'inconnu')}: {e}")

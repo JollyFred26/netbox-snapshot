@@ -46,7 +46,7 @@ def get_connections():
     return response.json()["results"]
 
 def create_network_graph():
-    """Crée un graphe des périphériques avec leurs adresses IP et connexions, incluant les ports."""
+    """Crée un graphe des périphériques avec leurs adresses IP et connexions, incluant les étiquettes des ports aux extrémités des connexions."""
     G = nx.Graph()
 
     # Récupérer tous les périphériques
@@ -68,7 +68,7 @@ def create_network_graph():
 
         # Ajouter les adresses IP au label du nœud
         if ip_addresses:
-            device_label += f"\nIPs: {', '.join(ip_addresses)}"
+            device_label += f"\n{', '.join(ip_addresses)}"
 
         G.add_node(device_id, label=device_label)
 
@@ -76,6 +76,8 @@ def create_network_graph():
     connections = get_connections()
 
     # Ajouter les connexions entre les périphériques
+    edge_port_labels = {}  # Dictionnaire pour stocker les étiquettes des ports pour chaque arête
+
     for connection in connections:
         try:
             # Récupérer les terminaisons A et B
@@ -106,28 +108,50 @@ def create_network_graph():
             if not device_a_id or not device_b_id or device_a_id == device_b_id:
                 continue
 
-            # Trier les ports par ID de périphérique pour un ordre cohérent
-            if device_a_id < device_b_id:
-                edge_label = f"{a_port_name} ↔ {b_port_name}"
-            else:
-                edge_label = f"{b_port_name} ↔ {a_port_name}"
-            #Ajouter l'arête avec une étiquette contenant les noms des ports
-            G.add_edge(device_a_id, device_b_id, label=edge_label)
+            # Ajouter l'arête
+            G.add_edge(device_a_id, device_b_id)
+
+            # Stocker les étiquettes des ports pour cette arête
+            edge_port_labels[(device_a_id, device_b_id)] = (a_port_name, b_port_name)
 
         except Exception as e:
             print(f"Erreur lors du traitement de la connexion {connection.get('id', 'inconnu')}: {e}")
 
     # Dessiner le graphe avec Kamada-Kawai
     pos = nx.kamada_kawai_layout(G)
-    labels = nx.get_node_attributes(G, 'label')
-    edge_labels = nx.get_edge_attributes(G, 'label')
+    node_labels = nx.get_node_attributes(G, 'label')
 
     plt.figure(figsize=(12, 8))
-    nx.draw(G, pos, labels=labels, with_labels=True, node_size=3000, node_color='lightblue', font_size=8, font_weight='bold')
-    nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_color='red', font_size=7)
-    plt.title("Réseau des périphériques avec ports (Kamada-Kawai)")
-    plt.savefig("network_graph_with_ports.png")
+
+    # Dessiner les nœuds sous forme de rectangles
+    nx.draw_networkx_nodes(G, pos, node_size=6000, node_shape="s", node_color='lightblue')
+
+    # Dessiner les arêtes
+    nx.draw_networkx_edges(G, pos)
+
+    # Dessiner les étiquettes des nœuds
+    for node, (x, y) in pos.items():
+        plt.text(x, y, node_labels[node], ha='center', va='center', fontsize=8, fontweight='bold')
+
+    # Ajouter les étiquettes des ports aux extrémités des connexions
+    for edge, port_labels in edge_port_labels.items():
+        x1, y1 = pos[edge[0]]
+        x2, y2 = pos[edge[1]]
+
+        # Positionner l'étiquette du port source près du nœud source
+        x_start = x1 + 0.15 * (x2 - x1)
+        y_start = y1 + 0.15 * (y2 - y1)
+        plt.text(x_start, y_start, port_labels[0], bbox=dict(facecolor='white', alpha=0.7, edgecolor='none'), fontsize=6, ha='center', va='center')
+
+        # Positionner l'étiquette du port destination près du nœud destination
+        x_end = x1 + 0.85 * (x2 - x1)
+        y_end = y1 + 0.85 * (y2 - y1)
+        plt.text(x_end, y_end, port_labels[1], bbox=dict(facecolor='white', alpha=0.7, edgecolor='none'), fontsize=6, ha='center', va='center')
+
+    plt.title("Réseau des périphériques avec rectangles ajustés (Kamada-Kawai)")
+    plt.savefig("network_graph_with_rectangles.png")
     plt.show()
+
 
 if __name__ == "__main__":
     create_network_graph()

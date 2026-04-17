@@ -3,3 +3,4 @@ python-dotenv
 pynetbox
 requests
 networkx
+pyvis
